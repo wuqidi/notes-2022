@@ -94,7 +94,7 @@ Main-Class:org.springframework.boot.loader.JarLauncher
 		ClassLoader classLoader = createClassLoader(getClassPathArchivesIterator());
       //加载所有的jar包；
       //springboot自己实现ZipFile，JDK默认的AppClassLoader只能从根目录加载文件，并且不支持jar in jar模式 org.springframework.boot.loader.archive.JarFileArchive
-      //org.springframework.boot.loader.LaunchedURLClassLoaderj继承URLClassLoader
+      //org.springframework.boot.loader.LaunchedURLClassLoaderj继承java.net.URLClassLoader
 		String jarMode = System.getProperty("jarmode");//jarmode
 		String launchClass = (jarMode != null && !jarMode.isEmpty()) ? JAR_MODE_LAUNCHER : getMainClass();
       //JAR_MODE_LAUNCHER = "org.springframework.boot.loader.jarmode.JarModeLauncher";
