@@ -66,12 +66,13 @@ System.out.println(TestLoader.class.getClassLoader().getParent().getParent());//
 //如果在获取父加载器则空指针，因为已经到Object了，没有了，顶了
 ```
 
-线程上下文类加载器：JNDI、JDBC、JCE、JAXB、JBI
-代码热替换与模块热部署（OSGI）
+[线程上下文类加载器：JNDI、JDBC、JCE、JAXB、JBI ***代码热替换与模块热部署（OSGI）](https://github.com/wuqidi/notes-2022/blob/main/java/JNDI%E4%B8%8EOSGI.md)
 
 ##### URLClassLoader与SecureClassLoader：
 
+SecureClassLoader：根据系统策略获取到的代码源提供权限支持。一些方法尝试执行特权操作，如果类加载器创建了ProtectionDomain ，则将代码源与当前安全策略匹配，决定是否进行授权。
 
+URLClassLoader：可以加载任意路径下的类，ClassLoader只能加载classpath路径下的类
 
 #### 自定义类加载器
 
