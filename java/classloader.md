@@ -76,5 +76,114 @@ URLClassLoader：可以加载任意路径下的类，ClassLoader只能加载clas
 
 #### 自定义类加载器
 
-继承java.land.ClassLoader，重写loadclass方法、重写findClass方法
+场景：
+1、隔离：类似tomcat这类web容器，用于隔离不同应用程序
+2、扩展：从网络、数据库等加载类
+
+```java
+protected Class<?> loadClass(String name, boolean resolve)
+    throws ClassNotFoundException
+{
+    synchronized (getClassLoadingLock(name)) {
+        // First, check if the class has already been loaded
+        Class<?> c = findLoadedClass(name);
+        if (c == null) {
+            long t0 = System.nanoTime();//纳秒级精度的时间
+            try {
+                if (parent != null) {
+                    c = parent.loadClass(name, false);//父类加载器
+                } else {
+                    c = findBootstrapClassOrNull(name);//BootClassLoader
+                }
+            } catch (ClassNotFoundException e) {
+                // ClassNotFoundException thrown if class not found
+                // from the non-null parent class loader
+            }
+
+            if (c == null) {//boot和父类都没加载
+                // If still not found, then invoke findClass in order
+                // to find the class.
+                long t1 = System.nanoTime();
+                c = findClass(name);//下一级加载器加载
+
+                // this is the defining class loader; record the stats
+                sun.misc.PerfCounter.getParentDelegationTime().addTime(t1 - t0);
+                sun.misc.PerfCounter.getFindClassTime().addElapsedTimeFrom(t1);
+                sun.misc.PerfCounter.getFindClasses().increment();
+            }
+        }
+        if (resolve) {
+            resolveClass(c);
+        }
+        return c;
+    }
+}
+
+/**
+将class文件加载到内存中，由于该文件是二进制的形式，所以需要defineClass方法将二进制转换为class文件。
+*/
+protected Class<?> findClass(String name) throws ClassNotFoundException {
+    throw new ClassNotFoundException(name);//如果没有重写则抛错
+}
+
+protected final Class<?> defineClass(String name, byte[] b, int off, int len,
+                                     ProtectionDomain protectionDomain)
+    throws ClassFormatError
+{
+    protectionDomain = preDefineClass(name, protectionDomain);
+    String source = defineClassSourceLocation(protectionDomain);
+    Class<?> c = defineClass1(name, b, off, len, protectionDomain, source);
+    postDefineClass(c, protectionDomain);
+    return c;
+}
+```
+
+继承java.land.ClassLoader，重写loadclass方法(会破坏双亲委派，不推荐)、重写findClass方法
+
+```java
+public class QidiClassLoader extends ClassLoader {
+    private final String jarPath;
+
+    public QidiClassLoader(ClassLoader parent,String jarPath) {
+        super(parent);
+        this.jarPath = jarPath;
+    }
+
+    @Override
+    protected Class<?> findClass(String name) throws ClassNotFoundException {
+        BufferedInputStream bis = null;
+        ByteArrayOutputStream baos = null;
+
+        String fileName = jarPath + name +".class";
+        try {
+            bis = new BufferedInputStream(new FileInputStream(fileName));
+            baos = new ByteArrayOutputStream();
+            int len;
+            byte[] data = new byte[1024];
+            while ((len=bis.read(data))!=-1){
+                baos.write(data,0,len);
+            }
+            byte[] bytes = baos.toByteArray();
+            return defineClass(null,bytes,0,bytes.length);
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            try {
+                bis.close();
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+            try {
+                baos.close();
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+        //return super.findClass(name);
+        return null;
+    }
+}
+```
+
+
 
