@@ -53,7 +53,8 @@ private static Map<String, List<String>> loadSpringFactories(ClassLoader classLo
 ```java
 
 Class.forName("",true,new URLClassLoader(null));
-
+//JVM查找并加载指定的类，即会执行该类的静态代码段
+.newInstance();//会执行无参构造函数
 ```
 
 ```java
@@ -89,8 +90,45 @@ public ConfigurableApplicationContext run(String... args) {
        //DefaultApplicationStartup
        
       prepareContext(bootstrapContext, context, environment, listeners, applicationArguments, printedBanner);
-       //准备上下文
-      refreshContext(context);//刷新上下文
+       /**
+1.打印springboot及项目信息:
+ 日志内容：org.springframework.boot.StartupInfoLogger
+ pid：org.springframework.boot.system.ApplicationPid#getPid
+ 
+2.***Application启动类注册
+org.springframework.context.annotation.AnnotatedBeanDefinitionReader#doRegisterBean
+
+3.加载启动类注解
+org.springframework.boot.BeanDefinitionLoader
+	Class.isAnonymousClass():用于检查基础类是否匿名
+org.springframework.context.annotation.AnnotatedBeanDefinitionReader#doRegisterBean
+	org.springframework.util.ConcurrentReferenceHashMap
+	org.springframework.core.annotation.AnnotationsScanner#getDeclaredAnnotations
+     */
+      refreshContext(context);
+/**
+1.添加关闭钩子：Runtime.getRuntime().addShutdownHook(new Thread(this, "SpringApplicationShutdownHook"));//在jvm关闭时调用的钩子，系统执行完“钩子”jvm才是关闭。
+2.刷新上下文：
+org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext#refresh
+org.springframework.context.support.AbstractApplicationContext#refresh
+3.IOC
+org.springframework.context.annotation.ConfigurationClassParser#parse(java.util.Set<org.springframework.beans.factory.config.BeanDefinitionHolder>)
+org.springframework.context.annotation.ConfigurationClassPostProcessor#processConfigBeanDefinitions
+org.springframework.context.annotation.ComponentScanAnnotationParser#parse
+org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider#scanCandidateComponents
+	org.springframework.core.io.support.ResourcePatternResolver#CLASSPATH_ALL_URL_PREFIX
+根据路径加载类：org.springframework.core.io.support.PathMatchingResourcePatternResolver#getResources
+org.springframework.context.annotation.ConfigurationClassPostProcessor#processConfigBeanDefinitions
+根据filePath进行应用class文件读取：
+	org.springframework.core.io.support.PathMatchingResourcePatternResolver#doRetrieveMatchingFiles
+根据读取到的文件进性加载：
+org.springframework.context.annotation.ConfigurationClassBeanDefinitionReader#loadBeanDefinitionsForConfigurationClass
+	如果有ResourcePatternResolver类去加载的时候，会进行加载mapper/*.xml->取决于getResources传入了什么。
+ThemeSource初始化：org.springframework.ui.context.support.UiApplicationContextUtils#initThemeSource
+
+
+
+*/
       afterRefresh(context, applicationArguments);//
       Duration timeTakenToStartup = Duration.ofNanos(System.nanoTime() - startTime);
       if (this.logStartupInfo) {
@@ -115,11 +153,17 @@ public ConfigurableApplicationContext run(String... args) {
 }
 ```
 
-##### 
+##### ![2022-05-11_010343](2022-05-11_010343.png)
 
 ##### ConfigurableEnvironment 
 
 ##### ConfigurableApplicationContext
+
+```
+BeanDefinitionLoader
+java 通过代理获取注解
+```
+
 资料：
 
 [(24条消息) 从0-1了解SpringBoot如何运行（一）：Environment环境装配_原来是笑傲菌殿下的博客-CSDN博客](https://blog.csdn.net/Laugh_xiaoao/article/details/123982865)
