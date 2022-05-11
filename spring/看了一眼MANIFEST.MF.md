@@ -102,7 +102,7 @@ Main-Class:org.springframework.boot.loader.JarLauncher
 		launch(args, launchClass, classLoader);
       //org.springframework.boot.loader.MainMethodRunner#MainMethodRunner
       //org.springframework.boot.loader.Launcher 作为父类
-      /**
+      /**这里不是new了一个新的线程执行，就是方法名重合了而已，还是在当前线程
       	public void run() throws Exception {
 		Class<?> mainClass = Class.forName(this.mainClassName, false,
 				Thread.currentThread().getContextClassLoader());

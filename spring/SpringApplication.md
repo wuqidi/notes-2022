@@ -107,7 +107,7 @@ org.springframework.context.annotation.AnnotatedBeanDefinitionReader#doRegisterB
      */
       refreshContext(context);
 /**
-1.添加关闭钩子：Runtime.getRuntime().addShutdownHook(new Thread(this, "SpringApplicationShutdownHook"));//在jvm关闭时调用的钩子，系统执行完“钩子”jvm才是关闭。
+1.添加关闭钩子：Runtime.getRuntime().addShutdownHook(new Thread(this, "SpringApplicationShutdownHook"));//在jvm关闭时调用的钩子，系统执行完“钩子”jvm才关闭。
 2.刷新上下文：
 org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext#refresh
 org.springframework.context.support.AbstractApplicationContext#refresh
@@ -121,21 +121,24 @@ org.springframework.context.annotation.ClassPathScanningCandidateComponentProvid
 org.springframework.context.annotation.ConfigurationClassPostProcessor#processConfigBeanDefinitions
 根据filePath进行应用class文件读取：
 	org.springframework.core.io.support.PathMatchingResourcePatternResolver#doRetrieveMatchingFiles
-根据读取到的文件进性加载：
+根据读取到的文件进行class加载：
 org.springframework.context.annotation.ConfigurationClassBeanDefinitionReader#loadBeanDefinitionsForConfigurationClass
 	如果有ResourcePatternResolver类去加载的时候，会进行加载mapper/*.xml->取决于getResources传入了什么。
-ThemeSource初始化：org.springframework.ui.context.support.UiApplicationContextUtils#initThemeSource
-
-
-
+4.ThemeSource初始化：org.springframework.ui.context.support.UiApplicationContextUtils#initThemeSource
+5.启动tomcat：
+org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory#getWebServer
+org.springframework.boot.web.embedded.tomcat.TomcatWebServer#initialize
+6.实例化所有剩余的（非惰性初始化）单例。
+org.springframework.beans.factory.support.DefaultListableBeanFactory#preInstantiateSingletons
 */
-      afterRefresh(context, applicationArguments);//
+      afterRefresh(context, applicationArguments);//狗屁~空的，啥也没干
       Duration timeTakenToStartup = Duration.ofNanos(System.nanoTime() - startTime);
       if (this.logStartupInfo) {
-         new StartupInfoLogger(this.mainApplicationClass).logStarted(getApplicationLog(), timeTakenToStartup);
+         new StartupInfoLogger(this.mainApplicationClass).logStarted(getApplicationLog(), timeTakenToStartup);//打印启动日志
       }
       listeners.started(context, timeTakenToStartup);
       callRunners(context, applicationArguments);
+	/**启动ApplicationRunner或CommandLineRunner的 */
    }
    catch (Throwable ex) {
       handleRunFailure(context, ex, listeners);
@@ -153,17 +156,27 @@ ThemeSource初始化：org.springframework.ui.context.support.UiApplicationConte
 }
 ```
 
-##### ![2022-05-11_010343](2022-05-11_010343.png)
+```java
+//在new Thread(启动器).getDelMethodName("main").invoker();
+//只有并没有停止，而是调用了Thread.exit方法，
+//系统调用此方法是为了让线程在实际退出之前有机会进行清理。
+java.lang.Thread#exit
+```
 
-##### ConfigurableEnvironment 
+##### ![2022-05-11_010343](SpringApplication.assets/2022-05-11_010343-16522836033162.png)
+
+##### ConfigurableEnvironment ：配置信息都在里面了，可使用@Autowired获取
 
 ##### ConfigurableApplicationContext
 
-```
-BeanDefinitionLoader
-java 通过代理获取注解
-```
+​	实现了Closeable，try-catch-resources语法创建的资源抛出异常后，jvm会自动调用close方法进行资源释放。
 
-资料：
+##### BeanDefinitionLoader：Bean定义加载器
+
+##### java 获取注解：
+
+​	class.forname("").getAnnotations();
+
+*资料：*
 
 [(24条消息) 从0-1了解SpringBoot如何运行（一）：Environment环境装配_原来是笑傲菌殿下的博客-CSDN博客](https://blog.csdn.net/Laugh_xiaoao/article/details/123982865)
