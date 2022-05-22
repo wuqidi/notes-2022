@@ -29,7 +29,6 @@ CPU多级缓存：![image-20220517001525283](cas.assets/image-20220517001525283.
 这两种锁定如果进行触发？操作的数据跨多个缓存行，则使用总线锁定；不支持缓存锁定的cpu，使用总线锁定。
 
 CISC(复指令集、X86)：cmpxchg 指令
-
 RISC(简指令集、ARM)：load and reserver 和store conditional两个指令实现
 
 **MESI协议：**是以缓存行的状态命名的。该协议要求在每个缓存行增加两个状态位
@@ -39,8 +38,17 @@ RISC(简指令集、ARM)：load and reserver 和store conditional两个指令实
 * S：共享，多个cpu中都有缓存，与内存一致
 * I：无效，本cpu中缓存已经失效
 
+
+
+***题外话***
+
+cas的原子性：在x86/64直接读取8字节操作也仅仅在不跨越cache line时保证其原子性，并非读取都是原子性。
+
+
+
 *资料*
 
 [(24条消息) Java无锁并发详细教程_夏小白.的博客-CSDN博客_java无锁并发](https://blog.csdn.net/xia1140418216/article/details/121007970)
 
 [并发编程之无锁 - 云+社区 - 腾讯云 (tencent.com)](https://cloud.tencent.com/developer/article/1587913)
+[关于各种CPU架构的CAS原子操作的疑惑？ - 知乎 (zhihu.com)](https://www.zhihu.com/question/54882419)
