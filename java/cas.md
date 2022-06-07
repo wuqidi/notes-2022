@@ -44,7 +44,15 @@ RISC(简指令集、ARM)：load and reserver 和store conditional两个指令实
 
 cas的原子性：在x86/64直接读取8字节操作也仅仅在不跨越cache line时保证其原子性，并非读取都是原子性。
 
+cache line大小：一般是64字节；而64位CPU的CPU line大小是64字节
 
+伪共享：两个数据位于同一个cache line中，cpu line是cpu读取内存的单位，存在这两个数据同时被读取到两个不同cpu cache中。
+
+​	MESI：cpu1 line读取到cpu cache中，cpu cache line状态变为E，cpu2 line读取到cpu cache中，cpu cache line变为S；
+​				cpu1去更改了一个值，此时cpu cache line变为M，cpu2中的cpu chache line变为I；
+​				cpu2去内存重新读取值，cpu cache line变为E，修改后写到内存中。
+
+伪共享怎么避免：cache line对齐；
 
 *资料*
 
@@ -52,3 +60,4 @@ cas的原子性：在x86/64直接读取8字节操作也仅仅在不跨越cache l
 
 [并发编程之无锁 - 云+社区 - 腾讯云 (tencent.com)](https://cloud.tencent.com/developer/article/1587913)
 [关于各种CPU架构的CAS原子操作的疑惑？ - 知乎 (zhihu.com)](https://www.zhihu.com/question/54882419)
+https://blog.csdn.net/aa119101/article/details/124173194
